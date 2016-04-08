@@ -6,10 +6,10 @@ class CheckWhitelistConfigureAs
     @whitelistManager ?= new WhitelistManager {datastore, uuidAliasResolver}
 
   do: (job, callback) =>
-    {fromUuid, toUuid, responseId, auth} = job.metadata
-    fromUuid ?= auth.uuid
-    emitter = fromUuid
-    subscriber = toUuid
+    {responseId, auth} = job.metadata
+    emitter = auth.as
+    subscriber = auth.uuid
+    return @sendResponse responseId, 204, callback unless emitter?
     @whitelistManager.checkConfigureAs {emitter, subscriber}, (error, verified) =>
       return @sendResponse responseId, 500, callback if error?
       return @sendResponse responseId, 403, callback unless verified

@@ -10,16 +10,13 @@ describe 'CheckWhitelistConfigureAs', ->
       whitelistManager: @whitelistManager
 
   describe '->do', ->
-    describe 'when called with a valid job', ->
+    describe 'when called with a valid job with no as', ->
       beforeEach (done) ->
-        @whitelistManager.checkConfigureAs.yields null, true
         job =
           metadata:
             auth:
               uuid: 'green-blue'
               token: 'blue-purple'
-            toUuid: 'bright-green'
-            fromUuid: 'dim-green'
             responseId: 'yellow-green'
         @sut.do job, (error, @newJob) => done error
 
@@ -32,33 +29,19 @@ describe 'CheckWhitelistConfigureAs', ->
       it 'should get have the status of ', ->
         expect(@newJob.metadata.status).to.equal http.STATUS_CODES[204]
 
-    describe 'when called with a valid job without a from', ->
+    describe 'when called with a valid job that has an as', ->
       beforeEach (done) ->
         @whitelistManager.checkConfigureAs.yields null, true
         job =
           metadata:
             auth:
-              uuid: 'green-blue'
-              token: 'blue-purple'
-            toUuid: 'bright-green'
-            responseId: 'yellow-green'
+              uuid: 'device'
+              as: 'impersonator'
+            responseId: 'purple-green'
         @sut.do job, (error, @newJob) => done error
 
       it 'should call the whitelistmanager with the correct arguments', ->
-        expect(@whitelistManager.checkConfigureAs).to.have.been.calledWith emitter: 'green-blue', subscriber: 'bright-green'
-
-    describe 'when called with a different valid job', ->
-      beforeEach (done) ->
-        @whitelistManager.checkConfigureAs.yields null, true
-        job =
-          metadata:
-            auth:
-              uuid: 'dim-green'
-              token: 'blue-lime-green'
-            toUuid: 'hot-yellow'
-            fromUuid: 'ugly-yellow'
-            responseId: 'purple-green'
-        @sut.do job, (error, @newJob) => done error
+        expect(@whitelistManager.checkConfigureAs).to.have.been.calledWith emitter: 'impersonator', subscriber: 'device'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'purple-green'
@@ -75,12 +58,13 @@ describe 'CheckWhitelistConfigureAs', ->
         job =
           metadata:
             auth:
-              uuid: 'puke-green'
-              token: 'blue-lime-green'
-            toUuid: 'super-purple'
-            fromUuid: 'not-so-super-purple'
+              uuid: 'device'
+              as: 'imposter'
             responseId: 'purple-green'
         @sut.do job, (error, @newJob) => done error
+
+      it 'should call the whitelistmanager with the correct arguments', ->
+        expect(@whitelistManager.checkConfigureAs).to.have.been.calledWith emitter: 'imposter', subscriber: 'device'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'purple-green'
@@ -97,12 +81,15 @@ describe 'CheckWhitelistConfigureAs', ->
         job =
           metadata:
             auth:
-              uuid: 'puke-green'
-              token: 'blue-lime-green'
-            toUuid: 'green-bomb'
-            fromUuid: 'green-safe'
+              uuid: 'device'
+              as:   'trouble-maker'
             responseId: 'purple-green'
         @sut.do job, (error, @newJob) => done error
+
+      it 'should call the whitelistmanager with the correct arguments', ->
+        expect(@whitelistManager.checkConfigureAs).to.have.been.calledWith
+          emitter: 'trouble-maker'
+          subscriber: 'device'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'purple-green'
